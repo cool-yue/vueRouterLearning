@@ -1,0 +1,1 @@
+使用`VueRouter`需要事先定义一个从path映射到component的routes对象,并把该对像作为参数传入`VueRouter`构造函数来进行实例化,`this.$router.push`这一类的方法都是`VueRouter`对象的方法,因此操作路由,实际上就是操作注入根组件的`VueRouter`的实例，下面来分析`VueRouter`这个类和它的各种逻辑。
