@@ -168,7 +168,7 @@ export function createMatcher (
     }
     return createRoute(record, location, redirectedFrom, router)
   }
-  
+
   // 这里返回一个对象,产生一个闭包
   // 这个闭包可以操作
   // pathList, pathMap, nameMap
