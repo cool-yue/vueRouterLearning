@@ -170,6 +170,12 @@ alias顾名思义就是别名的意思，它的使用方式如下：
 ## createMatcher ##
 在`createRouteMap`执行完成后，产生了3个结果集，它们分别是`pathList`,`pathMap`,`nameMap`,这3个结果集存在一个闭包中，通过后面定义的几个方法来操作这几个结果集。后面定义的函数有
 ## createMatcher->addRoutes ##
+addRoutes接受一个routes这个参数，通过解析这个routes对象，将record放进`createWatcher`产生的闭包环境中`pathList`，`pathMap`，`nameMap`中。
+
+      function addRoutes (routes) {
+    	createRouteMap(routes, pathList, pathMap, nameMap)
+      }
+
 ## createMatcher->match ##
 ## createMatcher->redirect ##
 ## createMatcher->_createRoute ##
@@ -180,5 +186,6 @@ alias顾名思义就是别名的意思，它的使用方式如下：
       return {
     	match,
     	addRoutes
-      }
-通过
+     }
+matcher存在2个方法，一个是match一个是addRoutes。到这里createMatcher完成。
+## 总结 ##

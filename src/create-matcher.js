@@ -31,36 +31,56 @@ export function createMatcher (
     currentRoute?: Route,
     redirectedFrom?: Location
   ): Route {
+    // 标准化rawLocation
     const location = normalizeLocation(raw, currentRoute, false, router)
+    // 拿到标准化后的location的name属性
     const { name } = location
 
+    // 如果name属性存在
     if (name) {
+      // 在nameMap中通过name取到record
       const record = nameMap[name]
       if (process.env.NODE_ENV !== 'production') {
         warn(record, `Route with name '${name}' does not exist`)
       }
+      // 如果record不存在就createRoute,函数执行完毕
       if (!record) return _createRoute(null, location)
+      // 运行到这里表示record存在
+      // 拿到paramNames
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
-
+      
+      // 如果params不是对象
+      // 将location.params设置为对象
       if (typeof location.params !== 'object') {
         location.params = {}
       }
-
+      
+      // 如果currentRoute.params是对象
       if (currentRoute && typeof currentRoute.params === 'object') {
+        // 遍历这个params的键
         for (const key in currentRoute.params) {
+          // 如果这个key在location.params中不存在
+          // 但是在paramNames中存在
           if (!(key in location.params) && paramNames.indexOf(key) > -1) {
+            // currentRoute.params中的对应的值赋给location.params[key]
             location.params[key] = currentRoute.params[key]
           }
         }
       }
-
+      // 如果record存在
       if (record) {
+        // 运行fillParams
+        // 然后创建Route
         location.path = fillParams(record.path, location.params, `named route "${name}"`)
         return _createRoute(record, location, redirectedFrom)
       }
     } else if (location.path) {
+      // 如果location.path存在
+      // location.params ={} 先初始化一个对象
+      // 然后遍历pathList
+      // 如果匹配到了就创建Route
       location.params = {}
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
@@ -70,23 +90,31 @@ export function createMatcher (
         }
       }
     }
+    // 运行到这里表示并没有匹配成功
+    // 直接创建route
     // no match
     return _createRoute(null, location)
   }
 
+  // 重定向
   function redirect (
     record: RouteRecord,
     location: Location
   ): Route {
+    // 拿到record的redirect属性
     const originalRedirect = record.redirect
+    // 如果redirect是函数
     let redirect = typeof originalRedirect === 'function'
         ? originalRedirect(createRoute(record, location, null, router))
         : originalRedirect
-
+    // 如果redirect是字符串
+    // 就将redirect包装成一个对象,这个对象有一个值为redirect的path属性
     if (typeof redirect === 'string') {
       redirect = { path: redirect }
     }
-
+    
+    // 如果没有redirect或者redirect不是对象
+    // 报个错,然后返回
     if (!redirect || typeof redirect !== 'object') {
       if (process.env.NODE_ENV !== 'production') {
         warn(
@@ -95,20 +123,30 @@ export function createMatcher (
       }
       return _createRoute(null, location)
     }
-
+    
+    // redirect现在已经是对象了
     const re: Object = redirect
+    // 拿到name和path属性
     const { name, path } = re
+    // 拿到location的query,hash,params3个属性
     let { query, hash, params } = location
+    // 如果redirect存在query就用redirect的否则用location的
     query = re.hasOwnProperty('query') ? re.query : query
+    // 如果redirect存在hash就用redirect的否则用location的
     hash = re.hasOwnProperty('hash') ? re.hash : hash
+    // 如果redirect存在params就用redirect的否则用location的
     params = re.hasOwnProperty('params') ? re.params : params
 
     if (name) {
       // resolved named direct
+      // 如果name存在
+      // 现在nameMap中通过name拿到record
       const targetRecord = nameMap[name]
       if (process.env.NODE_ENV !== 'production') {
         assert(targetRecord, `redirect failed: named route "${name}" not found.`)
       }
+      // 通过运行match来匹配
+      // 返回结果
       return match({
         _normalized: true,
         name,
@@ -117,6 +155,8 @@ export function createMatcher (
         params
       }, undefined, location)
     } else if (path) {
+      // 如果path存在,先处理RecordPath再fillParams
+      // 最后返回match的结果
       // 1. resolve relative redirect
       const rawPath = resolveRecordPath(path, record)
       // 2. resolve params
@@ -132,15 +172,20 @@ export function createMatcher (
       if (process.env.NODE_ENV !== 'production') {
         warn(false, `invalid redirect option: ${JSON.stringify(redirect)}`)
       }
+      // 运行到这里证明redirect不对,给个警告,同时返回
       return _createRoute(null, location)
     }
   }
 
+  // 别名
   function alias (
     record: RouteRecord,
     location: Location,
     matchAs: string
   ): Route {
+    // 填充参数
+    // 运行match
+    // 如果match了
     const aliasedPath = fillParams(matchAs, location.params, `aliased route with path "${matchAs}"`)
     const aliasedMatch = match({
       _normalized: true,
@@ -160,12 +205,16 @@ export function createMatcher (
     location: Location,
     redirectedFrom?: Location
   ): Route {
+    // 存在record.redirect
+    // 执行redirect
     if (record && record.redirect) {
       return redirect(record, redirectedFrom || location)
     }
+    // 存在matchAs就执行alias
     if (record && record.matchAs) {
       return alias(record, location, record.matchAs)
     }
+    // 前面都不存在就执行createRoute
     return createRoute(record, location, redirectedFrom, router)
   }
 
