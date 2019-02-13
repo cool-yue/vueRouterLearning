@@ -38,12 +38,12 @@ vueRouter的构造函数，传入的是一个route集合，这个route就是一�
     this.afterHooks = []
     // 默认是hash模式
     let mode = options.mode || 'hash'
-如上面给这些变量的初始化较为简单，注意`mode`的默认模式是hash。history和matcher较为复杂，先看matcher。
+如上面给这些变量的初始化较为简单，注意`mode`的默认模式是hash。history和matcher较为复杂，先看matcher,matcher对象是一个将定义好的路由集合进行收集转化成一条可用的record，这几个集合分别是`pathList`，`pathMap`，`nameMap`，具体看createMatcher专门的文档。
 
     this.matcher = createMatcher(options.routes || [], this)
 再来看history的初始化
 
-    // 假定这里是hash模式
+    // history对象有3个实现类，分别是HTML5History,HashHistory,AbstractHistory,具体看History文档
     switch (mode) {
       case 'history':
         this.history = new HTML5History(this, options.base)
@@ -62,3 +62,4 @@ vueRouter的构造函数，传入的是一个route集合，这个route就是一�
           assert(false, `invalid mode: ${mode}`)
         }
     }
+执行到这里constructor的代码已经执行完成了，下面看看VueRouter类中的
