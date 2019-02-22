@@ -196,26 +196,33 @@ export class History {
   }
 }
 
+// 标准化
 function normalizeBase (base: ?string): string {
   if (!base) {
     if (inBrowser) {
       // respect <base> tag
+      // 如果是浏览器环境,拿到页面的base标签的href值
       const baseEl = document.querySelector('base')
       base = (baseEl && baseEl.getAttribute('href')) || '/'
       // strip full URL origin
+      // 将base的http://或者https://替换掉
       base = base.replace(/^https?:\/\/[^\/]+/, '')
     } else {
+      // 如果不是浏览器环境
       base = '/'
     }
   }
   // make sure there's the starting slash
+  // 如果base的第一个字符部位'/'那么加上这个'/'
   if (base.charAt(0) !== '/') {
     base = '/' + base
   }
   // remove trailing slash
+  // 如果最尾部有'/',那么替换掉
   return base.replace(/\/$/, '')
 }
 
+// 处理队列
 function resolveQueue (
   current: Array<RouteRecord>,
   next: Array<RouteRecord>
@@ -225,7 +232,16 @@ function resolveQueue (
   deactivated: Array<RouteRecord>
 } {
   let i
+  // 取到current.length和next.length 2个中 较大的那个
   const max = Math.max(current.length, next.length)
+  // 用这个较大的值,进行循环遍历current和next中的值
+  // 只要发现不相等的时候就退出循环
+  // 此时i记录了第一次current和next中出现不相等时候的索引
+  // 可以认为从i开始(包含i),current中的东西与next不再相等
+  // 因此在current[i]以后的为deactivated
+  // 在next[i]中以及以后的元素为activated
+  // 在next[0,i)中同时也在current中存在
+  // 认为这里是更新的即updated
   for (i = 0; i < max; i++) {
     if (current[i] !== next[i]) {
       break
@@ -238,6 +254,11 @@ function resolveQueue (
   }
 }
 
+// 抽取guard,路由守卫
+// 第一个参数为目标对象
+// 第二个为对象名字
+// 第三个bind为一个方法
+// 第三个参数为可选,是一个布尔值,表示是否反转
 function extractGuards (
   records: Array<RouteRecord>,
   name: string,
@@ -255,6 +276,11 @@ function extractGuards (
   return flatten(reverse ? guards.reverse() : guards)
 }
 
+// 抽取出guard
+// 接受2个参数,一个是def,一个key
+// 如果def不是函数,就用Vue.extend将其转变为构造函数
+// 最后return def.options[key]
+// 也就是拿到def的options属性中的对应的key属性
 function extractGuard (
   def: Object | Function,
   key: string
