@@ -12,10 +12,10 @@ export function install (Vue) {
 
   // 拿到Vue
   _Vue = Vue
-  
+
   // 定义一个isDef的函数,只要不是undefined就能为true
   const isDef = v => v !== undefined
-  
+
   // 注册组件
   // 拿到vm的_parentVnode
   // 如果data中有registerRouteInstance
@@ -39,7 +39,7 @@ export function install (Vue) {
         this._router = this.$options.router
         // 将传入的router进行init(this)
         this._router.init(this)
-        // 把 '_route'定义成相应数据,this.route
+        // 把 '_route'定义成相应数据,this._route
         // 会访问到this._router.history.current)
         Vue.util.defineReactive(this, '_route', this._router.history.current)
       } else {
@@ -56,7 +56,7 @@ export function install (Vue) {
       registerInstance(this)
     }
   })
-  
+
   // 在Vue.prototype上面定义一个$router属性
   // 这个属性返回根组件的_router属性
   Object.defineProperty(Vue.prototype, '$router', {
@@ -74,7 +74,7 @@ export function install (Vue) {
   // router-link
   Vue.component('router-view', View)
   Vue.component('router-link', Link)
-   
+
   // 合并策略
   const strats = Vue.config.optionMergeStrategies
   // use the same hook merging strategy for route hooks

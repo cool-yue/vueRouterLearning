@@ -210,6 +210,21 @@ flatten函数接受一个数组，最后返回这个数组与[]的concat的结�
 		    ))
 	 }))
     }
+    // components待了s是什么什么意思，顾名思义就是有多个组件在匹配同一个路由的时候渲染，看如下的例子
+    <router-view class="view one"></router-view>
+	<router-view class="view two" name="a"></router-view>
+	<router-view class="view three" name="b"></router-view>
+    const router = new VueRouter({
+        routes:[{
+            path:"/",
+            components:{
+                default:Foo,
+                a:Bar,
+                b:Baz
+            }
+        }]
+    });
+    //这也就是说，当一个template中存在多个router-view的时候，需要知道谁在哪里渲染，通过在router-view上面提供一个name属性来，同时在components中将这个name的值作为components中的键，这样就匹配上去了。
 ### resolveAsyncComponents ###
 
     function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
@@ -373,17 +388,141 @@ flatten函数接受一个数组，最后返回这个数组与[]的concat的结�
     }
 
 ### extractGuard ###
-
-### extractGuards ###
-### extractLeaveGuards ###
-### extractUpdateHooks ###
+	// 抽取出guard
+	// 接受2个参数,一个是def,一个key
+	// 如果def不是函数,就用Vue.extend将其转变为构造函数
+	// 最后return def.options[key]
+	// 也就是拿到def的options属性中的对应的key(变量)属性
+	function extractGuard (
+	  def: Object | Function,
+	  key: string
+	): NavigationGuard | Array<NavigationGuard> {
+	  if (typeof def !== 'function') {
+	    // extend now so that global mixins are applied.
+	    def = _Vue.extend(def)
+	  }
+	  return def.options[key]
+	}
+这种extractGuard指定了函数的第二个参数，这个参数的是写在组件`options`中的`guard`钩子，`例如beforeRouterEnter`，`beforeRouterUpdate`，`beforeRouteLeave`，将第二个参数给一个这个字符串，第一个def为一个vue的构造函数或者`options`，无论怎样，通过extend都能将其转化为构造函数。
 ### bindGuard ###
+    // bindGuard顾名思义就是绑定guard的上下文环境
+    // 上下文环境就是instance
+	function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
+	      if (instance) {
+	    	return function boundRouteGuard () {
+	      		return guard.apply(instance, arguments)
+	    	}
+	      }
+    }
+### extractGuards ###
+
+	// 抽取guard,路由守卫
+	// 第一个参数为目标对象
+	// 第二个为对象名字
+	// 第三个bind为一个方法
+	// 第四个参数为可选,是一个布尔值,表示是否反转
+	// 例如第二个name参数可以是beforeRouteLeave,
+	// 那么就从一个装有RouteRecord的一个数组中去过滤出名字为name的guard
+	// 例如beforeRouteLeave,如果guard是一个数组那么就map然后对每个
+	// guard进行bind上下文,也就是对应的实例
+	// 如果guard不是数组就是直接bind上下文
+	function extractGuards (
+	  records: Array<RouteRecord>,
+	  name: string,
+	  bind: Function,
+	  reverse?: boolean
+	): Array<?Function> {
+	  const guards = flatMapComponents(records, (def, instance, match, key) => {
+	    const guard = extractGuard(def, name)
+	    if (guard) {
+	      return Array.isArray(guard)
+	        ? guard.map(guard => bind(guard, instance, match, key))
+	        : bind(guard, instance, match, key)
+	    }
+	  })
+	  return flatten(reverse ? guards.reverse() : guards)
+	}
+### extractLeaveGuards ###
+	// 抽取出beforeRouteLeave,注意,它存在反转
+	function extractLeaveGuards (deactivated: Array<RouteRecord>): Array<?Function> {
+	  return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true)
+	}
+### extractUpdateHooks ###
+	// 抽取出beforeRouteUpdate
+	function extractUpdateHooks (updated: Array<RouteRecord>): Array<?Function> {
+	  return extractGuards(updated, 'beforeRouteUpdate', bindGuard)
+	}
 ### extractEnterGuards ###
+	// 抽取出beforeRouteEnter
+	// 这里跟其余2个组件guard不同,beforeRouteEnter
+	// 这里没有instance这个bind,因此这里只能通过cb
+	// 也就是回调来进行this的访问
+	// 因为回调会放入poll里面
+	function extractEnterGuards (
+	  activated: Array<RouteRecord>,
+	  cbs: Array<Function>,
+	  isValid: () => boolean
+	): Array<?Function> {
+	  return extractGuards(activated, 'beforeRouteEnter', (guard, _, match, key) => {
+	    return bindEnterGuard(guard, match, key, cbs, isValid)
+	  })
+	}
 ### bindEnterGuard ###
+	// bindEnterGuard接受4个参数
+	// 这个函数返回一个函数function(to,from.next) {}
+	// 内层的函数的逻辑是执行guard函数
+	// 将to,from作为前2个参数,第三个参数为一个函数
+	// 其中函数的参数为一个回调,会执行next(cb)
+	// 如果cb是函数,就把cb压入一个cbs的函数数组
+	// 同时包装一个poll,理由是:
+	// 使用poll的原因是,当router-view被一个out-in的transition包装的时候
+	// instance可能还没有注册,需要轮询到它注册直到当前route已经不存在了
+	function bindEnterGuard (
+	  guard: NavigationGuard,
+	  match: RouteRecord,
+	  key: string,
+	  cbs: Array<Function>,
+	  isValid: () => boolean
+	): NavigationGuard {
+	  return function routeEnterGuard (to, from, next) {
+	    return guard(to, from, cb => {
+	      next(cb)
+	      if (typeof cb === 'function') {
+	        cbs.push(() => {
+	          // #750
+	          // if a router-view is wrapped with an out-in transition,
+	          // the instance may not have been registered at this time.
+	          // we will need to poll for registration until current route
+	          // is no longer valid.
+	          poll(cb, match.instances, key, isValid)
+	        })
+	      }
+	    })
+	  }
+	}
 ### poll ###
+	// poll轮询?
+	// 接受4个参数
+	// 首先如果存在instance,那个就直接调用cb(instance)
+	// 如果不存在instance但是isValid函数返回了true
+	// 那么就设置16毫秒的延时来递归执行poll
+	// 使用poll的原因是,当router-view被一个out-in的transition包装的时候
+	// instance可能还没有注册,需要轮询到它注册知道当前route已经不存在了
+	function poll (
+	  cb: any, // somehow flow cannot infer this is a function
+	  instances: Object,
+	  key: string,
+	  isValid: () => boolean
+	) {
+	  if (instances[key]) {
+	    cb(instances[key])
+	  } else if (isValid()) {
+	    setTimeout(() => {
+	      poll(cb, instances, key, isValid)
+	    }, 16)
+	  }
+	}
 
 
-
-## HashHistory ##
-## HTML5History ##
-## AbstractHistory ##
+#总结
+写到这里，history的base类就已经完了，下面来看看扩展类。

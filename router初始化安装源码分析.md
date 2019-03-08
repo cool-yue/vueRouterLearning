@@ -111,7 +111,7 @@ router是一个单页应用怎么也绕不开的一个话题，在分析源码�
 		    this._router = this.$options.router
 		    // 将传入的router进行init(this)
 		    this._router.init(this)
-		    // 把 '_route'定义成相应数据,this.route
+		    // 把 '_route'定义成相应数据,this._route
 		    // 会访问到this._router.history.current)
 		    Vue.util.defineReactive(this, '_route', this._router.history.current)
 		      } else {

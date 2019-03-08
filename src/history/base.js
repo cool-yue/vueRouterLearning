@@ -65,8 +65,12 @@ export class History {
     this.errorCbs.push(errorCb)
   }
 
+// 关键方法
+// 第一个参数为需要进入的路由
   transitionTo (location: RawLocation, onComplete?: Function, onAbort?: Function) {
+    // 首先通过this.router.match()方法把location和this.current作为参数传进去获得route
     const route = this.router.match(location, this.current)
+    // 然后执行confirmTransition,其中传入了2个函数,一个是onComplete一个是onAbort
     this.confirmTransition(route, () => {
       this.updateRoute(route)
       onComplete && onComplete(route)
@@ -258,7 +262,12 @@ function resolveQueue (
 // 第一个参数为目标对象
 // 第二个为对象名字
 // 第三个bind为一个方法
-// 第三个参数为可选,是一个布尔值,表示是否反转
+// 第四个参数为可选,是一个布尔值,表示是否反转
+// 例如第二个name参数可以是beforeRouteLeave,
+// 那么就从一个装有RouteRecord的一个数组中去过滤出名字为name的guard
+// 例如beforeRouteLeave,如果guard是一个数组那么就map然后对每个
+// guard进行bind上下文,也就是对应的实例
+// 如果guard不是数组就是直接bind上下文
 function extractGuards (
   records: Array<RouteRecord>,
   name: string,
@@ -280,7 +289,7 @@ function extractGuards (
 // 接受2个参数,一个是def,一个key
 // 如果def不是函数,就用Vue.extend将其转变为构造函数
 // 最后return def.options[key]
-// 也就是拿到def的options属性中的对应的key属性
+// 也就是拿到def的options属性中的对应的key(变量)属性
 function extractGuard (
   def: Object | Function,
   key: string
@@ -292,14 +301,18 @@ function extractGuard (
   return def.options[key]
 }
 
+// 抽取出beforeRouteLeave,注意,它存在反转
 function extractLeaveGuards (deactivated: Array<RouteRecord>): Array<?Function> {
   return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true)
 }
 
+// 抽取出beforeRouteUpdate
 function extractUpdateHooks (updated: Array<RouteRecord>): Array<?Function> {
   return extractGuards(updated, 'beforeRouteUpdate', bindGuard)
 }
 
+// bindGuard顾名思义就是绑定guard的上下文环境
+// 上下文环境就是instance
 function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
   if (instance) {
     return function boundRouteGuard () {
@@ -308,6 +321,11 @@ function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
   }
 }
 
+// 抽取出beforeRouteEnter
+// 这里跟其余2个组件guard不同,beforeRouteEnter
+// 这里没有instance这个bind,因此这里只能通过cb
+// 也就是回调来进行this的访问
+// 因为回调会放入poll里面
 function extractEnterGuards (
   activated: Array<RouteRecord>,
   cbs: Array<Function>,
@@ -318,6 +336,15 @@ function extractEnterGuards (
   })
 }
 
+// bindEnterGuard接受4个参数
+// 这个函数返回一个函数function(to,from.next) {}
+// 内层的函数的逻辑是执行guard函数
+// 将to,from作为前2个参数,第三个参数为一个函数
+// 其中函数的参数为一个回调,会执行next(cb)
+// 如果cb是函数,就把cb压入一个cbs的函数数组
+// 同时包装一个poll,理由是:
+// 使用poll的原因是,当router-view被一个out-in的transition包装的时候
+// instance可能还没有注册,需要轮询到它注册直到当前route已经不存在了
 function bindEnterGuard (
   guard: NavigationGuard,
   match: RouteRecord,
@@ -342,6 +369,13 @@ function bindEnterGuard (
   }
 }
 
+// poll轮询?
+// 接受4个参数
+// 首先如果存在instance,那个就直接调用cb(instance)
+// 如果不存在instance但是isValid函数返回了true
+// 那么就设置16毫秒的延时来递归执行poll
+// 使用poll的原因是,当router-view被一个out-in的transition包装的时候
+// instance可能还没有注册,需要轮询到它注册知道当前route已经不存在了
 function poll (
   cb: any, // somehow flow cannot infer this is a function
   instances: Object,
