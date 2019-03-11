@@ -71,7 +71,7 @@ transitionTo接收3个参数，其中第一个是必须传，第二个和第三�
 ### confirmTransition ###
 
     confirmTransition (route: Route, onComplete: Function, onAbort?: Function) {}
-中文直译确认转移，接收3个参数，第一个参数为route，第二个参数为onComplete的回调，第三个参数为onAbort的回调，也就是成功转以后的回调，和转移失败的回调。下面分析一下这其中的过程。首先拿到`this.current`。
+中文直译确认转移，接收3个参数，第一个参数为route，第二个参数为onComplete的回调，第三个参数为onAbort的回调，也就是成功转移后的回调，和转移失败的回调。下面分析一下这其中的过程。首先拿到`this.current`。
     
     const current = this.current
 定义一个abort的函数,这个函数首先判断传入的对象是满足isError条件，如果满足将errorCbs里面的存入的函数进行遍历地执行，并且传入err对象，如果传入了onAbort那么还会执行onAbort。

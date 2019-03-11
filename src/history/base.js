@@ -133,6 +133,9 @@ export class History {
       resolveAsyncComponents(activated)
     )
 
+    // 函数运行到这里说明了需要转移的route和当前route是不一样的
+    // 在转移之前先做一些准备
+    // 因为route和current不同,所以pending就是route
     this.pending = route
     const iterator = (hook: NavigationGuard, next) => {
       if (this.pending !== route) {

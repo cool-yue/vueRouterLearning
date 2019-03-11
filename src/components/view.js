@@ -24,7 +24,7 @@ export default {
 
     // 由于render的调用环境是这样的
     // render.call(vm,$createElement)
-    
+
     // 拿到parent.$createElement
     // 拿到props.name,拿到父组件的$route对象
     // 拿到parent._routerViewCache如果没有的话就创建一个空的对象
@@ -66,7 +66,7 @@ export default {
     if (inactive) {
       return h(cache[name], data, children)
     }
-    
+
     // 拿到$route对象的matched[depth]
     const matched = route.matched[depth]
 
@@ -76,7 +76,7 @@ export default {
       cache[name] = null
       return h()
     }
-    
+
     // 在matched的components属性中根据name取到对应的组件
     const component = cache[name] = matched.components[name]
 
@@ -114,7 +114,7 @@ export default {
     // resolve props
     // 按照一定的规则处理props
     data.props = resolveProps(route, matched.props && matched.props[name])
-    
+
     // 最后返回h(component,data,children)
     return h(component, data, children)
   }
