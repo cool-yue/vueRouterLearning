@@ -1,4 +1,4 @@
-router是一个单页应用怎么也绕不开的一个话题，在分析源码之前，如果自己要实现一个router，可能也就是通过hashChange这个事件结合dom来将页面进行替换，那么来看看vueRouter是如何做的。
+router是一个单页应用怎么也绕不开的一个话题，在分析源码之前，如果自己要实现一个router，可能也就是通过hashChange这个事件，window.location.hash,然后结合dom来将页面通过事件的形式进行替换，那么来看看vueRouter是如何做的。
 
 ## install ##
 在安装vueRouter之前要做的事情就是:

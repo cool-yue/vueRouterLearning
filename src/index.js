@@ -32,7 +32,7 @@ export default class VueRouter {
   resolveHooks: Array<?NavigationGuard>;
   afterHooks: Array<?AfterNavigationHook>;
   /**
-   * 
+   *
    *
    *  const Foo = { template: '<div>foo</div>' }
       const Bar = { template: '<div>bar</div>' }
@@ -115,7 +115,7 @@ export default class VueRouter {
     }
     // this.app 指向root组件
     this.app = app
-    
+
     const history = this.history
 
     if (history instanceof HTML5History) {
@@ -178,6 +178,8 @@ export default class VueRouter {
     this.go(1)
   }
 
+  // 拿到匹配的components
+  //
   getMatchedComponents (to?: RawLocation | Route): Array<any> {
     const route: any = to
       ? to.matched
@@ -194,6 +196,7 @@ export default class VueRouter {
     }))
   }
 
+  // 处理
   resolve (
     to: RawLocation,
     current?: Route,
@@ -226,6 +229,10 @@ export default class VueRouter {
     }
   }
 
+  // 接受一个routes对象
+  // 调用matcher的addRoutes(routes)
+  // 如果当前的与START不相等
+  // 就调用history.transitionTo(this.history.getCurrentLocation());
   addRoutes (routes: Array<RouteConfig>) {
     this.matcher.addRoutes(routes)
     if (this.history.current !== START) {
@@ -234,6 +241,12 @@ export default class VueRouter {
   }
 }
 
+// registerHook接受2个参数
+// 一个是数组,一个是函数
+// 将第二个参数push到第一个数组中
+// 返回一个函数,list和fn组成闭包
+// 拿到list.indexOf(fn)的索引然后把fn从list中删除
+// 这里典型的发布订阅模式
 function registerHook (list: Array<any>, fn: Function): Function {
   list.push(fn)
   return () => {
@@ -242,6 +255,11 @@ function registerHook (list: Array<any>, fn: Function): Function {
   }
 }
 
+// 创建href
+// 这个函数接受3个参数,base,fullPath,mode
+// 如果mode是hash模式,也就是说url里面需要有#
+// 那么就在fullPath前面加#
+// 如果有base就在path前面加base,并且将//转化为/
 function createHref (base: string, fullPath: string, mode) {
   var path = mode === 'hash' ? '#' + fullPath : fullPath
   return base ? cleanPath(base + '/' + path) : path
