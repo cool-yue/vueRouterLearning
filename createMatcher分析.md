@@ -178,6 +178,12 @@ addRoutes接受一个routes这个参数，通过解析这个routes对象，将re
       }
 
 ## createMatcher->match ##
+	  function match (
+	    raw: RawLocation,
+	    currentRoute?: Route,
+	    redirectedFrom?: Location
+	  ）{}
+match方法接受3个参数，第一个参数为`rawLocation`，这个`rawlocation`就是一个字符串的路径对于hash模式，这个路径就是#号后面的东西。第二个参数为currentRoute为一个Route对象，第三个参数为Location对象，可以不传。
 
 ## createMatcher->redirect ##
 ## createMatcher->_createRoute ##

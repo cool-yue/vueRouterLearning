@@ -79,6 +79,7 @@ match主要是调用matcher中的match方法。
 拿到 this.history.current。
 ## init ##
 init方法在install的时候也会执行。init接收一个vue实例作为参数，由于前面已经执行了构造函数里面的代码，所以有`this.apps = []`,所以首先将参数app压入这个数组，判断`this.app`是否存在，如果存在，表示已经初始化好了，当然没有初始化好，就`this.app = app`,这样下一次就成为了初始化好的状态，然后拿到`this.history`,如果history是`HTML5History`实例，或者是`HashHistory`的实例，分别进行各自的`transitionTo`,最后执行history.listen并把函数传入,这个函数遍历所有的app,然后将`app._route=route`,这个`route`是回调函数的参数。具体见下面的代码。
+
 	  init (app: any /* Vue component instance */) {
 	    process.env.NODE_ENV !== 'production' && assert(
 	      install.installed,

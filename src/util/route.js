@@ -5,6 +5,8 @@ import { stringifyQuery } from './query'
 
 const trailingSlashRE = /\/?$/
 
+// 创建一个route对象
+// 具体看route的type script
 export function createRoute (
   record: ?RouteRecord,
   location: Location,

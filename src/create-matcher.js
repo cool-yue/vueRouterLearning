@@ -34,6 +34,8 @@ export function createMatcher (
     // 标准化rawLocation
     const location = normalizeLocation(raw, currentRoute, false, router)
     // 拿到标准化后的location的name属性
+
+    // 拿到location中的name的属性
     const { name } = location
 
     // 如果name属性存在
@@ -50,13 +52,13 @@ export function createMatcher (
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
-      
+
       // 如果params不是对象
       // 将location.params设置为对象
       if (typeof location.params !== 'object') {
         location.params = {}
       }
-      
+
       // 如果currentRoute.params是对象
       if (currentRoute && typeof currentRoute.params === 'object') {
         // 遍历这个params的键
@@ -85,6 +87,9 @@ export function createMatcher (
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
         const record = pathMap[path]
+        // 遍历pathList中的每个path
+        // 然后执行matchRoute,取出每个pathMap中对应path的record
+        // record中存有regex,components,instances
         if (matchRoute(record.regex, location.path, location.params)) {
           return _createRoute(record, location, redirectedFrom)
         }
@@ -112,7 +117,7 @@ export function createMatcher (
     if (typeof redirect === 'string') {
       redirect = { path: redirect }
     }
-    
+
     // 如果没有redirect或者redirect不是对象
     // 报个错,然后返回
     if (!redirect || typeof redirect !== 'object') {
@@ -123,7 +128,7 @@ export function createMatcher (
       }
       return _createRoute(null, location)
     }
-    
+
     // redirect现在已经是对象了
     const re: Object = redirect
     // 拿到name和path属性
@@ -200,6 +205,8 @@ export function createMatcher (
     return _createRoute(null, location)
   }
 
+  // 创建Route
+
   function _createRoute (
     record: ?RouteRecord,
     location: Location,
@@ -227,19 +234,23 @@ export function createMatcher (
   }
 }
 
+// 匹配Route
 function matchRoute (
   regex: RouteRegExp,
   path: string,
   params: Object
 ): boolean {
+  // 判断传入的path是否能够匹配传入的regex正则
   const m = path.match(regex)
-
+  // 如果不匹配就返回false
   if (!m) {
     return false
   } else if (!params) {
+    // 如果连参数都没有,直接返回true
     return true
   }
-
+  // 遍历regex.keys
+  // 最后把参数中的属性替换成匹配到的值
   for (let i = 1, len = m.length; i < len; ++i) {
     const key = regex.keys[i - 1]
     const val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i]
@@ -247,10 +258,10 @@ function matchRoute (
       params[key.name] = val
     }
   }
-
+  // 返回true
   return true
 }
-
+//
 function resolveRecordPath (path: string, record: RouteRecord): string {
   return resolvePath(path, record.parent ? record.parent.path : '/', true)
 }

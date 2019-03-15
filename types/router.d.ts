@@ -2,6 +2,8 @@ import Vue = require("vue");
 import { ComponentOptions, PluginFunction } from "vue";
 
 type Component = ComponentOptions<Vue> | typeof Vue;
+
+// 字典
 type Dictionary<T> = { [key: string]: T };
 
 export type RouterMode = "hash" | "history" | "abstract";
