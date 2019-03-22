@@ -30,6 +30,7 @@ history是这3个类实现的基类，它指定了一些子类应该实现的方
 		    // start with a route object that stands for "nowhere"
 		    // start的为一个path为"/"的route对象
 		    this.current = START
+            // 其余的属性仅仅做一个初始化
 		    this.pending = null
 		    this.ready = false
 		    this.readyCbs = []

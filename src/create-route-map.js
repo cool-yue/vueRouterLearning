@@ -21,7 +21,7 @@ export function createRouteMap (
   pathMap: Dictionary<RouteRecord>;
   nameMap: Dictionary<RouteRecord>;
 } {
-  
+
   // the path list is used to control path matching priority
   const pathList: Array<string> = oldPathList || []
   const pathMap: Dictionary<RouteRecord> = oldPathMap || Object.create(null)
@@ -85,7 +85,7 @@ function addRouteRecord (
   const normalizedPath = normalizePath(path, parent)
   // 这里没传
   const pathToRegexpOptions: PathToRegexpOptions = route.pathToRegexpOptions || {}
-  
+
   // 如果传入了caseSensitive
   // 这里假定没传
   if (typeof route.caseSensitive === 'boolean') {
@@ -111,7 +111,7 @@ function addRouteRecord (
         ? route.props
         : { default: route.props }
   }
-  
+
   // route这里也没有值
   if (route.children) {
     // Warn if route is named, does not redirect and has a default child route.
@@ -129,6 +129,10 @@ function addRouteRecord (
         )
       }
     }
+    // 如果检测到有children属性把children的属性也生成record
+    // 处理children的时候由于parentRecord已经生成,因此parent已经存在
+    // 同时看parentRecord有没有matchAs也就是别名,有的话把matchAs作为父路径
+    // 同理那么子record的matchAs就是父亲的matchAs/child.path
     route.children.forEach(child => {
       const childMatchAs = matchAs
         ? cleanPath(`${matchAs}/${child.path}`)
@@ -136,8 +140,15 @@ function addRouteRecord (
       addRouteRecord(pathList, pathMap, nameMap, child, record, childMatchAs)
     })
   }
-  
+
   // 这里也没值
+  // 如果存在alias,有alias也就是别名，无非就是用别名作为path再来添加一次record
+  // 这里要注意的是最后一个参数用的是当前record.path,
+  // aliasRoute中只存在{path:alias 和 children}
+  // 所以alias生成的record并没有components,因为没传入component或者components
+  // 但是alias生成的record存在matchAs这个字段，这个字段就是Record.path这个字段
+  // 至于children,由于父路由组件由别名,因此在这个父组件下面的子组件也需要可以匹配这个别名
+  // 最终继续将它们全部放入pathList,pathMap,nameMap集合中
   if (route.alias !== undefined) {
     const aliases = Array.isArray(route.alias)
       ? route.alias
@@ -158,7 +169,7 @@ function addRouteRecord (
       )
     })
   }
-  
+
   // patchMap是一个空对象
   // pathList这时是空数组
   // 这里条件满足
@@ -183,7 +194,7 @@ function addRouteRecord (
 }
 
 // 解析Route的正则
-// 
+//
 function compileRouteRegex (path: string, pathToRegexpOptions: PathToRegexpOptions): RouteRegExp {
   const regex = Regexp(path, [], pathToRegexpOptions)
   if (process.env.NODE_ENV !== 'production') {

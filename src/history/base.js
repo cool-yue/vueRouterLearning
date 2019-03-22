@@ -39,6 +39,7 @@ export class History {
     // start with a route object that stands for "nowhere"
     // start的为一个path为"/"的route对象
     this.current = START
+    // 其余的属性仅仅做一个初始化
     this.pending = null
     this.ready = false
     this.readyCbs = []
