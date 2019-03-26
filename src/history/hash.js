@@ -20,7 +20,7 @@ export class HashHistory extends History {
     if (fallback && checkFallback(this.base)) {
       return
     }
-    // 确保有/,如果没有就会加上/,然后替换
+    // 确保有hash前面有/,如果没有就会加上/,然后替换
     ensureSlash()
   }
 
@@ -45,10 +45,12 @@ export class HashHistory extends History {
   }
 
   // 这里注意下push和replace的区别,由于push是进行的window.location.hash = xxx的操作
+  // 虽然这是替换,但是最后的结果还是会把hash压入到历史中
   // 这一系列的替换,都会压入到浏览器的history中
   // 而replace是通过window.location.replace,它不会产生历史记录
   // 这两个方法仅此区别
-
+  // 这里的transition真的是调用得非常精妙
+  // 在onComplete之前之前,执行push的操作,区分了push和replace
   push (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     // 后期的push
     // 也是调用的transitionTo方法,第二个参数依旧是个函数

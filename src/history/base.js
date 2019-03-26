@@ -72,6 +72,11 @@ export class History {
     // 首先通过this.router.match()方法把location和this.current作为参数传进去获得route
     const route = this.router.match(location, this.current)
     // 然后执行confirmTransition,其中传入了2个函数,一个是onComplete一个是onAbort
+    // 可以看到tansitionTo实际调用的就是confirmTransition
+    // 同时接受3个参数,这3个参数,将location,onComplete,onAbort进行了再一次封装和改造
+
+    // location => route
+    // onComplete 继续包装,在onComplete的前后分别插入this.updateRoute和this.ensureURL()
     this.confirmTransition(route, () => {
       this.updateRoute(route)
       onComplete && onComplete(route)

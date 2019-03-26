@@ -46,7 +46,7 @@ export function normalizeLocation (
   }
 
   // 解析path路径
-  // parsedPath做的工作就是抽取出path中的hash,query和抽取前2部分的url
+  // parsedPath做的工作就是抽取出path中的hash,query和抽取前2部分之后的的url
   const parsedPath = parsePath(next.path || '')
   // 初始化的时候current为根路径也就是 /
   const basePath = (current && current.path) || '/'
