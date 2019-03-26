@@ -7,6 +7,8 @@ const trailingSlashRE = /\/?$/
 
 // 创建一个route对象
 // 具体看route的type script
+// 基本就是把location里面的一些属性拿出来重新组织成一个route对象
+// 最后将这个对象进行冻结
 export function createRoute (
   record: ?RouteRecord,
   location: Location,
