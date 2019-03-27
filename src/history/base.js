@@ -147,6 +147,11 @@ export class History {
       if (this.pending !== route) {
         return abort()
       }
+
+    // to:Route:the target Route Object being navigated to.
+    // from:Route:the current route being navigated away from.
+    // next:Function:this function must be called to resolve the hook.
+    // 这里的3个函数分别对应上面3个,route->to,current->from,()=>{}->next
       try {
         hook(route, current, (to: any) => {
           if (to === false || isError(to)) {
@@ -178,12 +183,26 @@ export class History {
     }
 
     runQueue(queue, iterator, () => {
+      // 创建一个postEnterCbs空数组
       const postEnterCbs = []
+      // 定义个函数,这个函数返回this.current === route
       const isValid = () => this.current === route
       // wait until async components are resolved before
       // extracting in-component enter guards
+
+      // 在actived,postEnterCbs,isValid抽取出enterGuards
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
+
+      // enterGuards再拼接this.router.resolveHooks
+      // 组成成新的queue
       const queue = enterGuards.concat(this.router.resolveHooks)
+
+      // 拿到queue之后,这里的queue已经是属于post,也就是后置的钩子
+      // 在进入到目标组件后的钩子
+      // 将这个队列进行runQueue
+      // queue清理完后,将this.pending = null
+      // 最后将route传入onComplete
+      // 然后再$nextTick执行 postEnterCbs.forEach(cb => { cb() })
       runQueue(queue, iterator, () => {
         if (this.pending !== route) {
           return abort()
