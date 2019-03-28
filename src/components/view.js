@@ -120,6 +120,9 @@ export default {
   }
 }
 
+// 处理Props属性
+// 如果matched.props[name]是对象就直接返回
+// 是函数,返回该函数的调用,并把route传入config
 function resolveProps (route, config) {
   switch (typeof config) {
     case 'undefined':
