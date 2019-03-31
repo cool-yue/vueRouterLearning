@@ -129,7 +129,7 @@ router是一个单页应用怎么也绕不开的一个话题，在分析源码�
 ### 非根组件beforeCreate钩子 ###
 对于非根组件,由于不存`$options.router`,因此它的`beforeCreate`只需要找到`$parent._routerRoot`,最后`registerInstance(this, this)`;
 ### registerInstance ###
-registerInstance,上面说过,就是调用`parentVnode`中的`data`中是否有`registerRouteInstance`,如果有就调用。
+registerInstance,上面说过,就是调用`parentVnode`中的`data`中是否有`registerRouteInstance`,如果有就调用。现在要注意的是这个方法只在`router-view`的`vnode.data`中存在，换句话说，这句话就是针对`router-view`的初始化。
 
      data.registerRouteInstance = (vm, val) => {
 	      // val could be undefined for unregistration
@@ -148,7 +148,7 @@ registerInstance,上面说过,就是调用`parentVnode`中的`data`中是否有`
     destroyed () {
       registerInstance(this)
     }
-区别于`beforedCreate`,`destroyed`方法只传入一个参数。继续往下看
+区别于`beforedCreate`,`destroyed`方法只传入一个参数，这个方法还是调用上面的`registerRouteInstance`函数，该函数如果第二个参数不传也就是`val`的值为`undefined`,同时满足`current===vm`，最后的结果就是把`undefined`赋值给`matched.instances[name]`,也就达到了的销毁的作用。继续往下看
 
      Object.defineProperty(Vue.prototype, '$router', {
     	get () { return this._routerRoot._router }

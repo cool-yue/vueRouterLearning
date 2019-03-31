@@ -377,4 +377,54 @@ runQueue3个参数，前面2个上面已经说够，第三个后面分析，先�
 	  step(0)
 	}
 
-下面看看在调用`runQueue`时候第三个参数,下面看看这个回调的过程，
+下面看看在调用`runQueue`时候第三个参数,第三个参数是当`queue`中的所有钩子全部执行完毕后调用,下面看看这个回调的过程。
+
+	() => {
+	      // 创建一个postEnterCbs空数组
+	      const postEnterCbs = []
+	      // 定义个函数,这个函数返回this.current === route
+	      const isValid = () => this.current === route
+	      // wait until async components are resolved before
+	      // extracting in-component enter guards
+	
+	      // 在actived,postEnterCbs,isValid抽取出enterGuards
+	      const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
+	
+	      // enterGuards再拼接this.router.resolveHooks
+	      // 组成成新的queue
+	      const queue = enterGuards.concat(this.router.resolveHooks)
+	
+	      // 拿到queue之后,这里的queue已经是属于post,也就是后置的钩子
+	      // 在进入到目标组件后的钩子
+	      // 将这个队列进行runQueue
+	      // queue清理完后,将this.pending = null
+	      // 最后将route传入onComplete
+	      // 然后再$nextTick执行 postEnterCbs.forEach(cb => { cb() })
+	      runQueue(queue, iterator, () => {
+	        if (this.pending !== route) {
+	          return abort()
+	        }
+	        this.pending = null
+	        onComplete(route)
+	        if (this.router.app) {
+	          this.router.app.$nextTick(() => {
+	            postEnterCbs.forEach(cb => { cb() })
+	      }
+如上面代码`postEnterCbs`顾名思义就是后置回调，`activated`这个数组里面，装的是新鲜的路由钩子,在这个新鲜的路由钩子调用`extractEnterGuards`抽取出`beforeRouteEnter`然后在抽取出`resolveHooks`,这个`resolveHooks`可能是官方预留的接口，并没有看到api中提到这个,然后将这些钩子按顺序拼接在一起，最后形成一个`queue`，上一轮的`runQueue`主要是清理`leave`钩子，回调的`runQueue`清理`beforeEnter`的钩子，最后在所有这些钩子都执行完毕的时候`onComplete(route)`,然后再用nextTick去执行一遍`postEnterCbs`。总而言之，`transitionTo`的代码很多都是处理钩子的顺序，最后贴一下官方给的顺序执行表，如下：
+
+
+    The Full Navigation Resolution Flow
+    Navigation triggered.
+    Call leave guards in deactivated components.
+    Call global beforeEach guards.
+    Call beforeRouteUpdate guards in reused components.
+    Call beforeEnter in route configs.
+    Resolve async route components.
+    Call beforeRouteEnter in activated components.
+    Call global beforeResolve guards.
+    Navigation confirmed.
+    Call global afterEach hooks.
+    DOM updates triggered.
+    Call callbacks passed to next in beforeRouteEnter guards with instantiated instances.
+
+## 总结 ##
