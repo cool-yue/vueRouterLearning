@@ -141,8 +141,9 @@ router-view是一个函数式组件,表示这个组件并没有自己的视图�
     return h(component, data, children)
 
 运行到这里，`router-view`组件渲染完毕，下面总结一下`router-view`中`render`的过程到底并入了原生不具备的几个属性以及整个流程下来的思路。
-1.router-view是函数式组件，render函数需要指定第二个参数，因为函数式组件虽然不是html的原生标签，但是它也不必要产生一个
-2.
+1.router-view是函数式组件，render函数需要指定第二个参数，因为函数式组件虽然不是html的原生标签，但是它也不会产生一个vueInstance，因此没有自己的`this`上下文。
+2.函数式组件很多信息就需要从render函数的第二个参数拿,从上面的源码分析中，可以知道第二个参数传入了一些参数，这些参数基本上能够拿到上下文的信息。
+3.明确了1，2两点，下面来
 
 ## router-link ##
 router-link组件
