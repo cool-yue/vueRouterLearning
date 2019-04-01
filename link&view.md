@@ -141,9 +141,15 @@ router-view是一个函数式组件,表示这个组件并没有自己的视图�
     return h(component, data, children)
 
 运行到这里，`router-view`组件渲染完毕，下面总结一下`router-view`中`render`的过程到底并入了原生不具备的几个属性以及整个流程下来的思路。
-1.router-view是函数式组件，render函数需要指定第二个参数，因为函数式组件虽然不是html的原生标签，但是它也不会产生一个vueInstance，因此没有自己的`this`上下文。
-2.函数式组件很多信息就需要从render函数的第二个参数拿,从上面的源码分析中，可以知道第二个参数传入了一些参数，这些参数基本上能够拿到上下文的信息。
-3.明确了1，2两点，下面来
+
+    1.router-view是函数式组件，render函数需要指定第二个参数，因为函数式组件虽然不是html的原生标签，但是它也不必要产生一个,函数式组件就像一个壳子一样，它只管包装好已经定义好并具备vue实例的组件，而自己并没有什么实际意义的存在。
+    2.router-view的`render`函数式拿到了哪些呢，从第二个参数的`parent`中拿到了`$createElement`,从`props`中拿到了`name`,这里需要注意的是,`parent`它是个vue实例,能够通过它拿到vue实例中应该具备的一些属性，这里继续拿到了`$route`,然后在`parent`上面定义一个`routerViewCache`的属性，它是一个对象。
+    3.找到当前`router-view`的深度，逻辑就是不停地向上找`$parent`,直到没有`parent`为止，换句话说就是向上遍历到根节点，为什么要向上遍历，就是因为`router-view`可以嵌套，嵌套的路由，会按照层级依次渲染。其中注意一个细节就是一旦父`router-view`中存在`inactive`的情况，那么就返回缓存中的组件的渲染。
+    4.通过上一条中遍历的深度再去matched中找，如果没找到返回一个空组件。
+    5.找到了就把该组件放到cache中，并在data上定义一个`registerRouteInstance`方法。
+    6.在hook上面定义`prepatch`,这个`prepatch`，这个方法就是在matched.instances里面放入组件实例。
+    7.按照规则处理props
+    8.返回组件的渲染。router-view组件相较于普通组件，它的data里面多了`hook.prepatch`,`registerRouteInstance`,`routerViewDepth`,`routerView`。
 
 ## router-link ##
 router-link组件
